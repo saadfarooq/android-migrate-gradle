@@ -8,6 +8,13 @@ for dname in `find -name src`;do
   rm -r -f $dname/../bin;
   rm -r -f $dname/../gen;
 
+  plugin="apply plugin: 'com.android.application'"
+  if grep -Fxq "android.library=true" $dname/../project.properties; then
+    plugin="apply plugin: 'com.android.library'"
+  fi
+
+  dependencies=`cat $dname/../project.properties |sed -n "s/android.library.reference.*=..\/\(.*\)/    compile project(':\1')/p"`
+
   echo "Creating; src directory" $dname/main;  
   mkdir $dname/main; 
   echo "Creating java src directory" $dname/main;  
@@ -35,7 +42,7 @@ for dname in `find -name src`;do
   cp build.gradle.template $dname/../build.gradle
 
   # Create the default build.gradle file
-  echo "apply plugin: 'com.android.application'
+  echo "$plugin
 
 android {
     compileSdkVersion 23
@@ -49,7 +56,7 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:support-v4:23.0.0'
+$dependencies
 }
 " > $dname/../build.gradle;
 
