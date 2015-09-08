@@ -1,4 +1,5 @@
-echo "include " > settings.gradle;
+gradle init
+echo -n "include " > settings.gradle;
 
 # Loop through the sub-project directories
 for dname in `find -name src`;do 
@@ -34,38 +35,51 @@ for dname in `find -name src`;do
   cp build.gradle.template $dname/../build.gradle
 
   # Create the default build.gradle file
-  echo "buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:0.4'
-    }
-}
-apply plugin: 'android'
-
-dependencies {
-    compile files('libs/android-support-v4.jar')
-}
+  echo "apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 17
-    buildToolsVersion \"17.0.0\"
+    compileSdkVersion 23
+    buildToolsVersion \"23.0.0\"
 
     defaultConfig {
         minSdkVersion 7
-        targetSdkVersion 16
+        targetSdkVersion 22
     }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:support-v4:23.0.0'
 }
 " > $dname/../build.gradle;
 
   # Add current project to settings.gradle
-  echo \':`dirname ${dname##*./}`\',\  >> settings.gradle;
+  echo -n \':`dirname ${dname##*./}`\' >> settings.gradle;
 
   # Final comments
   echo "Processing of " $dname "done. ";
   echo;
 done
+
+# Remove the last "," in settings.gradle
+sed -i "s/''/', '/" settings.gradle;
+
+# Add all project configuration to build.gradle in project root directory.
+echo "buildscript {
+  repositories {
+      jcenter()
+  }
+  dependencies {
+      classpath 'com.android.tools.build:gradle:1.3.0'
+  }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+" > build.gradle;
 
 # Remove IDE specific files
 rm -r .idea
